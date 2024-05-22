@@ -11,7 +11,7 @@ namespace Proiect_7
     internal class Server
     {
         private static List<ClientDetails> connectedClients = new List<ClientDetails>();
-        static int clientCount = 1;
+        private static int clientCount = 1;
 
         public static void StartListening()
         {
@@ -30,7 +30,7 @@ namespace Proiect_7
                     Console.WriteLine("Waiting for a connection...");
                     Socket handler = listener.Accept();
 
-                    Task.Run(() =>  
+                    Task.Run(() =>
                     {
                         byte[] bytes = new byte[1024];
                         string data = null;
@@ -46,19 +46,26 @@ namespace Proiect_7
                         }
 
                         string connectionCode = data.Replace("<EOF>", "");
-                        ClientDetails clientDetails = new ClientDetails(clientCount,connectionCode, handler);
+                        ClientDetails clientDetails = new ClientDetails(clientCount, connectionCode, handler);
                         clientCount++;
                         connectedClients.Add(clientDetails);
                         Console.WriteLine("Client connected with connection code: " + connectionCode + ". Total clients: " + connectedClients.Count);
 
-                        string clientList = string.Join(", ", connectedClients);
-                        byte[] msg = Encoding.ASCII.GetBytes(clientList + "<EOF>");
-                        foreach (var client in connectedClients)
+                        string clientList = "";
+                        byte[] msg;
+
+                        if (connectedClients.Count > 1)
                         {
-                            clientList = string.Join("\n", connectedClients.Where(c => c != client));
+                            clientList = string.Join(", ", connectedClients);
                             msg = Encoding.ASCII.GetBytes(clientList + "<EOF>");
-                            client.Send(msg);
+                            foreach (var client in connectedClients)
+                            {
+                                clientList = string.Join("\n", connectedClients.Where(c => c != client));
+                                msg = Encoding.ASCII.GetBytes(clientList + "<EOF>");
+                                client.Send(msg);
+                            }
                         }
+
 
 
                         while (true)
@@ -90,8 +97,46 @@ namespace Proiect_7
                                 }
                                 break;
                             }
+                            if (data.Replace("<EOF>", "").Substring(0, 6) == "sendto")
+                            {
+                                string[] dataParts = data.Replace("<EOF>", "").Split(' ');
+                                int clientID = int.Parse(dataParts[1]);
+                                string connectionCodeFromSender = dataParts[3];
+                                string message = dataParts[4];
+                                for (int i = 5; i < dataParts.Length; i++)
+                                {
+                                    message += " " + dataParts[i];
+
+                                }
+                                ClientDetails clientToSend = connectedClients.FirstOrDefault(c => c.GetClientID() == clientID);
+                                if (clientToSend != null)
+                                {
+                                    clientToSend.Send(Encoding.ASCII.GetBytes("WMI " + connectionCodeFromSender + "|" + message + "<EOF>"));
+                                    Console.WriteLine("Sending message to client to receive result " + clientToSend);
+                                }
+                            }
+
+                            if (data.Replace("<EOF>", "").Substring(0, 6) == "Result")
+                            {
+                                Console.WriteLine("Received result from client: " + data);
+                                data = data.Replace("Result for ", "");
+                                data = data.Replace("<EOF>", "");
+                                string connectionCodeToSend = data.Split('|')[0].Trim();
+                                string connectionCodeClientResult = data.Split('|')[1];
+                                string wmiInstruction = data.Split('|')[2];
+                                string result = data.Split('|')[3];
+                                ClientDetails clientToSend = connectedClients.FirstOrDefault(c => c.GetConnectionCode() == connectionCodeToSend);
+                                Console.WriteLine("Client to send: " + connectionCodeToSend);
+                                if (clientToSend != null)
+                                {
+                                    int clientIdToSend = connectedClients.Find(c => c.GetConnectionCode() == connectionCodeClientResult).GetClientID();
+                                    Console.WriteLine("Client ID to send: " + clientIdToSend);
+                                    clientToSend.Send(Encoding.ASCII.GetBytes("From client " + clientIdToSend + " \n\tinstruction: " + wmiInstruction + "\n\tresult: " + result + "<EOF>"));
+                                    Console.WriteLine("Sending message to client as result " + clientToSend);
+                                }
+                            }
                         }
-                    }) ;
+                    });
                 }
             }
             catch (Exception e)
