@@ -59,6 +59,8 @@ internal class Client
                             Console.WriteLine("Sent to server: " + resultString);
                             receivedData = "";
                         }
+                        Console.Write("Enter a WMI instruction eg: 'SELECT * FROM Win32_Battery' or exit to disconnect: ");
+
                     }
                 });
 
@@ -74,9 +76,9 @@ internal class Client
                         break;
                     }
 
-                    else
+                    else if (message.Trim().StartsWith("SELECT * FROM ", StringComparison.OrdinalIgnoreCase))
                     {
-                        Console.Write("Enter Clients IDs to sent the instruction like: '1,2,3,4' ");
+                        Console.Write("Enter Clients IDs to sent the instruction eg: '1,2,3' : ");
 
                         string[] clients = Console.ReadLine().Split(',');
                         Console.WriteLine("Sending to clients: " + string.Join(",", clients));
@@ -89,6 +91,7 @@ internal class Client
                         }
 
                     }
+                    else { Console.WriteLine("The message is not a WMI instruction"); }
 
 
                 }
