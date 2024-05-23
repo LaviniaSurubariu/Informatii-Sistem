@@ -79,6 +79,8 @@ internal class Client
                         Console.Write("Enter Clients IDs to sent the instruction like: '1,2,3,4' ");
 
                         string[] clients = Console.ReadLine().Split(',');
+                        Console.WriteLine("Sending to clients: " + string.Join(",", clients));
+
                         foreach (var client in clients)
                         {
                             msg = Encoding.ASCII.GetBytes("sendto " + client + " from " + connectionCode + " " + message + "<EOF>");
