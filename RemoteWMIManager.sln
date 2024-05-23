@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Culegere Informatii Sistem la Distanta", "Proiect 7\Culegere Informatii Sistem la Distanta.csproj", "{F34C2E51-A40D-4214-8E1C-D15C7A308B88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteWMIManager", "Proiect 7\RemoteWMIManager.csproj", "{F34C2E51-A40D-4214-8E1C-D15C7A308B88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
