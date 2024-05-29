@@ -45,19 +45,30 @@ internal class Client
                             results = null;
                             string wmiInstruction = receivedData.Split('|')[1];
                             wmiInstruction.Trim();
-                            CimSession session = CimSession.Create(null);
-                            results = session.QueryInstances(@"root\cimv2", "WQL", wmiInstruction);
                             string resultString = "Result for " + senderConnectionCode + "|" + connectionCode + "|" + wmiInstruction + "|";
-                            foreach (CimInstance result in results)
+                            string finalResult = "";
+                            try
                             {
-                                resultString += result.ToString();
+                                CimSession session = CimSession.Create(null);
+                                results = session.QueryInstances(@"root\cimv2", "WQL", wmiInstruction);
+                                foreach (CimInstance result in results)
+                                {
+                                    finalResult += result.ToString();
+                                }
                             }
+                            catch (Exception e)
+                            {
+                                resultString += "Unknown query";
+                            }
+                            finally
+                            {
+                                resultString += finalResult;
 
-
-                            msg = Encoding.ASCII.GetBytes(resultString + " <EOF>");
-                            bytesSent = sender.Send(msg);
-                            Console.WriteLine("Sent to server: " + resultString);
-                            receivedData = "";
+                                msg = Encoding.ASCII.GetBytes(resultString + " <EOF>");
+                                bytesSent = sender.Send(msg);
+                                Console.WriteLine("Sent to server: " + resultString);
+                                receivedData = "";
+                            }
                         }
                         Console.Write("Enter a WMI instruction eg: 'SELECT * FROM Win32_Battery' or exit to disconnect: ");
 
